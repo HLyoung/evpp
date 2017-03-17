@@ -8,15 +8,7 @@
 namespace evnsq {
 
 Option::Option() {
-    dial_timeout = evpp::Duration(1.0);
-    read_timeout = evpp::Duration(60.0);
-    write_timeout = evpp::Duration(1.0);
-    heartbeat_interval = evpp::Duration(30.0);
-    query_nsqlookupd_interval = evpp::Duration(30.0);
-
-    client_id = "evnsq";
-    hostname = "evnsq.localhost.com"; // TODO get hostname
-    user_agent = "evnsq/1.0";
+   // hostname = "evnsq.localhost.com"; // TODO get hostname
 }
 
 std::string Option::ToJSON() const {

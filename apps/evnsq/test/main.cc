@@ -50,15 +50,18 @@ int main(int argc, char* argv[]) {
     int opt = 0;
     //int digit_optind = 0;
     int option_index = 0;
-    const char* optstring = "t:h:";
+    const char* optstring = "t:h:s:";
     static struct option long_options[] = {
         { "nsqd_tcp_addr", required_argument, NULL, 't' },
         { "lookupd_http_addr", required_argument, NULL, 'h' },
+        { "auth_secret", required_argument, NULL, 's' },
         { 0, 0, 0, 0 }
     };
 
     std::string nsqd_tcp_addr;
     std::string lookupd_http_url;
+    std::string auth_secret;
+    bool auth_enable = false;
 
     nsqd_tcp_addr = "127.0.0.1:4150";
     //nsqd_tcp_addr = "weizili-L1:4150";
@@ -73,6 +76,11 @@ int main(int argc, char* argv[]) {
         case 'h':
             lookupd_http_url = optarg;
             break;
+        
+        case 's':
+            auth_secret = optarg;
+            auth_enable = false;
+            break;
 
         default:
             printf("error argument [%s]\n", argv[optind]);
@@ -81,7 +89,10 @@ int main(int argc, char* argv[]) {
     }
 
     evpp::EventLoop loop;
-    evnsq::Producer client(&loop, evnsq::Option());
+    evnsq::Option op;
+    op.auth_secret = auth_secret;
+    op.auth_enable = auth_enable;
+    evnsq::Producer client(&loop, op);
     client.SetMessageCallback(&OnMessage);
     client.SetReadyCallback(std::bind(&OnReady, &loop, &client));
 

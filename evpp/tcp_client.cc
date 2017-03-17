@@ -22,7 +22,7 @@ TCPClient::~TCPClient() {
     assert(!connector_.get());
     auto_reconnect_.store(false);
     TCPConnPtr c = conn();
-    assert(c->IsDisconnected());
+    //assert(c->IsDisconnected());
     conn_.reset();
 }
 
@@ -92,8 +92,9 @@ void TCPClient::OnConnection(int sockfd, const std::string& laddr) {
 
     c->OnAttachedToLoop();
 }
-
+;
 void TCPClient::OnRemoveConnection(const TCPConnPtr& c) {
+    std::cout << "c.get" << c.get() << ", conn_.get" << conn_.get() << "\n";
     assert(c.get() == conn_.get());
     assert(loop_->IsInLoopThread());
 

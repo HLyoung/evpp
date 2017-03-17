@@ -39,6 +39,7 @@ public:
         kSubscribing = 4,
         kReady = 5, // Ready to produce messages to NSQD or consume messages from NSQD
         kDisconnecting = 6,
+        kAuthenticating = 7,
     };
 
     typedef std::function<void(const std::shared_ptr<NSQConn>& conn)> ConnectionCallback;
@@ -80,6 +81,9 @@ public:
     bool IsDisconnected() const {
         return status_ == kDisconnected;
     }
+    bool IsAuthenticating() const {
+        return status_ == kAuthenticating;
+    }
     const std::string& remote_addr() const;
 private:
     void WriteCommand(const Command& cmd);
@@ -94,6 +98,8 @@ private:
     void OnPublishResponse(const char* d, size_t len);
     void PushWaitACKCommand(const CommandPtr& cmd);
     CommandPtr PopWaitACKCommand();
+    void Authenticating();
+    void OnConnectionStatus();
 private:
     Client* nsq_client_;
     evpp::EventLoop* loop_;

@@ -152,7 +152,7 @@ void Client::OnConnection(const ConnPtr& conn) {
         default:
             break;
         }
-    } else if (conn->IsConnecting()) {
+    } else if (conn->IsConnecting() || conn->IsAuthenticating()) {
         MoveToConnectingList(conn);
     } else {
         // The application layer calls Close()

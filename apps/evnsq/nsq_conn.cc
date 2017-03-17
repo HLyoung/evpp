@@ -82,11 +82,11 @@ void NSQConn::OnTCPConnectionEvent(const evpp::TCPConnPtr& conn) {
             assert(status_ == kDisconnecting);
             status_ = kDisconnected;
         }
-
         if (conn_fn_) {
             auto self = shared_from_this();
             conn_fn_(self);
         }
+       // OnConnectionStatus();
     }
 }
 
@@ -111,18 +111,33 @@ void NSQConn::OnRecv(const evpp::TCPConnPtr& conn, evpp::Buffer* buf) {
             break;
 
         case evnsq::NSQConn::kIdentifying:
+            std::cout << "=========>opt=" << option_.auth_enable << "======<\n";
             if (buf->NextString(size - sizeof(frame_type)) == kOK) {
-                status_ = kConnected;
-                if (conn_fn_) {
-                    auto self = shared_from_this();
-                    conn_fn_(self);
+                if (option_.auth_enable) {
+                    Authenticating();
+                } else {
+                    status_ = kConnected;
+                    if (conn_fn_) {
+                        auto self = shared_from_this();
+                        conn_fn_(self);
+                    }
+
+                    //OnConnectionStatus();
                 }
             } else {
                 LOG_ERROR << "Identify ERROR";
                 Reconnect();
             }
             break;
+        case evnsq::NSQConn::kAuthenticating:
+            std::cout << "===========>"  << buf->ToString() << "\n";
+            status_ = kConnected;
+            if (conn_fn_) {
+                auto self = shared_from_this();
+                conn_fn_(self);
+            }
 
+            break;
         case evnsq::NSQConn::kConnected:
             assert(false && "It should never come here.");
             break;
@@ -130,10 +145,12 @@ void NSQConn::OnRecv(const evpp::TCPConnPtr& conn, evpp::Buffer* buf) {
         case evnsq::NSQConn::kSubscribing:
             if (buf->NextString(size - sizeof(frame_type)) == kOK) {
                 status_ = kReady;
+
                 if (conn_fn_) {
                     auto self = shared_from_this();
                     conn_fn_(self);
                 }
+                //OnConnectionStatus();
                 LOG_INFO << "Successfully connected to nsqd " << conn->remote_addr();
                 UpdateReady(100); //TODO RDY count
             } else {
@@ -300,4 +317,17 @@ void NSQConn::OnPublishResponse(const char* d, size_t len) {
     WritePublishCommand(cmd); // TODO This code will serialize Command more than twice. We need to cache the first serialization result to fix this performance problem
 }
 
+void NSQConn::OnConnectionStatus() {
+    if (conn_fn_) {
+        auto self = shared_from_this();
+        conn_fn_(self);
+    }
+}
+
+void NSQConn::Authenticating() {
+    Command c;
+    c.Auth(option_.auth_secret);
+    WriteCommand(c);
+    status_ = kAuthenticating;
+}
 }
