@@ -37,7 +37,6 @@ void FdChannel::Close() {
     }
     read_fn_ = ReadEventCallback();
     write_fn_ = EventCallback();
-    close_fn_ = EventCallback();
 }
 
 void FdChannel::AttachToLoop() {

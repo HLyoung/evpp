@@ -26,7 +26,6 @@ TCPConn::TCPConn(EventLoop* l,
         chan_.reset(new FdChannel(l, sockfd, false, false));
         chan_->SetReadCallback(std::bind(&TCPConn::HandleRead, this));
         chan_->SetWriteCallback(std::bind(&TCPConn::HandleWrite, this));
-        chan_->SetCloseCallback(std::bind(&TCPConn::HandleClose, this));
     }
 
     LOG_DEBUG << "TCPConn::[" << name_ << "] this=" << this << " channel=" << chan_.get() << " fd=" << sockfd;
