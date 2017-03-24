@@ -46,11 +46,14 @@ TCPConn::~TCPConn() {
 }
 
 void TCPConn::Close() {
+    LOG_INFO << "TCPConn::Close this=" << this << " fd=" << fd_ << " status=" << StatusToString() << " remote_addr=" << remote_addr_;
     auto c = shared_from_this();
     auto f = [c]() {
         assert(c->loop_->IsInLoopThread());
         c->HandleClose();
     };
+
+    // Use QueueInLoop to fix TCPClient::Close bug when the application delete TCPClient in callback
     loop_->QueueInLoop(f);
 }
 
@@ -172,6 +175,7 @@ void TCPConn::HandleRead() {
     } else if (n == 0) {
         if (type() == kOutgoing) {
             // This is an outgoing connection, we own it and it's done. so close it
+            LOG_DEBUG << "TCPConn::HandleRead this=" << this << " fd=" << fd_ << ". We read 0 bytes and close the socket.";
             HandleClose();
         } else {
             // Fix the half-closing problem£ºhttps://github.com/chenshuo/muduo/pull/117
@@ -179,7 +183,7 @@ void TCPConn::HandleRead() {
             // This is an incoming connection, we need to preserve the connection for a while so that we can reply to it.
             // And we set a timer to close the connection eventually.
             chan_->DisableReadEvent();
-            LOG_DEBUG << "channel (fd=" << chan_->fd() << ") DisableReadEvent";
+            LOG_DEBUG << "TCPConn::HandleRead this=" << this << " channel (fd=" << chan_->fd() << ") DisableReadEvent";
             loop_->RunAfter(close_delay_, std::bind(&TCPConn::HandleClose, shared_from_this())); // TODO leave it to user layer close.
         }
     } else {
@@ -219,6 +223,8 @@ void TCPConn::HandleWrite() {
 }
 
 void TCPConn::HandleClose() {
+    LOG_INFO << "TCPConn::HandleClose this=" << this << " remote_addr=" << remote_addr_ << " fd=" << fd_ << " status_=" << StatusToString();
+
     // Avoid multi calling
     if (status_ == kDisconnected) {
         return;

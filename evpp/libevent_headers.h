@@ -35,6 +35,7 @@
 #include <event2/dns_compat.h>
 #include <event2/dns_struct.h>
 #include <event2/listener.h>
+#define  ev_arg ev_evcallback.evcb_arg
 #endif
 
 #ifndef evtimer_new

@@ -24,6 +24,7 @@ FdChannel::~FdChannel() {
 }
 
 void FdChannel::Close() {
+    LOG_INFO << "FdChannel::Close() this=" << this << " fd=" << fd_;
     assert(event_);
     if (event_) {
         assert(!attached_);
