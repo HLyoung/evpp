@@ -66,6 +66,7 @@ TEST_UNIT(testTCPServer1) {
     tcp_client_thread.reset();
     loop.reset();
     tsrv.reset();
+    client.reset();
     H_TEST_ASSERT(evpp::GetActiveEventCount() == 0);
 }
 
